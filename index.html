@@ -552,32 +552,38 @@
         
         
         // Initial Load
-       // Initial Load (ดึงข้อมูลออนไลน์จาก Google Sheets)
+      // Initial Load (ดึงข้อมูลออนไลน์จาก Google Sheets)
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzhP2ta-Z_0pGO0g5hG9dB5ZeGb5qXSVmNNBC7yQD6uHpdYimsyhMPNBZ42OLfvuzMBLg/exec";
-        window.onload = async function() {
-    // ⚠️ นำ URL ของ Google Sheets Web App ที่ลงท้ายด้วย /exec มาใส่ตรงนี้
-   
 
+window.onload = async function() {
     try {
         let response = await fetch(WEB_APP_URL);
         let result = await response.json();
         
-        // แปลงข้อมูลจาก Google Sheets ให้เข้ากับโครงสร้างตารางของเว็บ
+        // แปลงข้อมูลจาก Google Sheets ให้เข้ากับโครงสร้างตารางของเว็บรองรับทั้งห้องและอุปกรณ์
         appData = result.map(row => ({
-            id: row.id,
-            roomName: row.roomName,
-            borrower: row.borrower,
-            date: row.date,
-            startTime: row.startTime,
-            endTime: row.endTime,
-            status: row.status
+            id: row.id || Date.now().toString(),
+            type: row.roomName ? 'room' : 'equipment',
+            roomName: row.roomName || '',
+            equipItem: row.equipItem || '',
+            borrower: row.borrower || '',
+            dept: row.dept || '',
+            title: row.title || '',
+            date: row.date || '',
+            startTime: row.startTime || '',
+            endTime: row.endTime || '',
+            attendees: parseInt(row.attendees) || 0,
+            qty: parseInt(row.qty) || 1,
+            startDateTime: row.startDateTime || '',
+            endDateTime: row.endDateTime || '',
+            status: row.status || 'approved'
         }));
     } catch (error) {
         console.error("ไม่สามารถโหลดข้อมูลจาก Google Sheets ได้:", error);
         appData = [...INITIAL_DATA]; // ใช้ข้อมูลสำรองถ้าดึงไม่สำเร็จ
     }
 
-    // ตรวจสอบสถานะการล็อกอินแอดมิน (ยังคงใช้ localStorage ตามเดิม)
+    // ตรวจสอบสถานะการล็อกอินแอดมิน
     const savedAuth = localStorage.getItem('school_av_admin_logged');
     if (savedAuth === 'true') {
         isAdminLoggedIn = true;
@@ -589,22 +595,40 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzhP2ta-Z_0pGO0g5hG
     if (typeof renderEquipTable === 'function') renderEquipTable();
     if (typeof renderAdminPortal === 'function') renderAdminPortal();
 };
-// ฟังก์ชันบันทึกข้อมูลการจองส่งตรงไปยัง Google Sheets
+// ฟังก์ชันบันทึกข้อมูลการจองส่งตรงไปยัง Google Sheets แบบครบถ้วนทุกฟิลด์
 async function saveToLocalStorage() {
-    // ดึงรายการล่าสุดจาก appData (รายการที่เพิ่งเพิ่มเข้ามาใหม่ล่าสุด)
     const latestBooking = appData[appData.length - 1];
-
     if (!latestBooking) return;
 
-    // ข้อมูลที่จะส่งไปบันทึกใน Google Sheets
+    // จัดเตรียมข้อมูลให้ตรงกับที่ Google Apps Script รอรับ
     const bookingData = {
+        type: latestBooking.type || "room",
         roomName: latestBooking.roomName || "",
+        equipItem: latestBooking.equipItem || "",
         borrower: latestBooking.borrower || "",
+        dept: latestBooking.dept || "",
+        title: latestBooking.title || "",
         date: latestBooking.date || "",
         startTime: latestBooking.startTime || "",
         endTime: latestBooking.endTime || "",
-        status: latestBooking.status || "จองแล้ว"
+        attendees: latestBooking.attendees || 0,
+        qty: latestBooking.qty || 1,
+        startDateTime: latestBooking.startDateTime || "",
+        endDateTime: latestBooking.endDateTime || "",
+        status: latestBooking.status || "pending"
     };
+
+    try {
+        await fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify(bookingData)
+        });
+        console.log("บันทึกข้อมูลลง Google Sheets สำเร็จ!");
+    } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
+        localStorage.setItem('school_av_data', JSON.stringify(appData));
+    }
+}
 
     try {
         // ใช้ WEB_APP_URL เดียวกับตอนโหลดข้อมูล
