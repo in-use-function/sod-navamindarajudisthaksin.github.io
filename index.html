@@ -605,6 +605,7 @@ async function saveToLocalStorage() {
     if (!latestBooking) return;
 
     const bookingData = {
+        id: latestBooking.id || "",
         type: latestBooking.type || "room",
         roomName: latestBooking.roomName || "",
         equipItem: latestBooking.equipItem || "",
@@ -622,7 +623,6 @@ async function saveToLocalStorage() {
     };
 
     try {
-        // แสดงสถานะกำลังบันทึก
         showToast('กำลังบันทึกข้อมูลลงระบบ...', 'info');
 
         await fetch(WEB_APP_URL, {
@@ -632,7 +632,7 @@ async function saveToLocalStorage() {
         
         showToast('บันทึกข้อมูลสำเร็จ!', 'success');
 
-        // รีเฟรชหน้าเว็บอัตโนมัติหลังจากบันทึกเสร็จ 1 วินาที เพื่อดึงข้อมูลล่าสุดจาก Google Sheets มาแสดงอย่างไร้รอยต่อ
+        // รีเฟรชหน้าเว็บอัตโนมัติหลังจากบันทึกเสร็จ 1 วินาที เพื่อดึงข้อมูลล่าสุดจาก Google Sheets มาแสดงผล
         setTimeout(() => {
             window.location.reload();
         }, 1000);
@@ -640,7 +640,6 @@ async function saveToLocalStorage() {
     } catch (error) {
         console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
         showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
-        localStorage.setItem('school_av_data', JSON.stringify(appData));
     }
 }
   
@@ -1166,7 +1165,7 @@ async function saveToLocalStorage() {
                 const idx = appData.findIndex(i => String(i.id) === String(editId));
                 if (idx !== -1) appData[idx] = record;
             } else {
-                appData.unshift(record);
+                appData.push(record);
             }
 
             saveToLocalStorage();
