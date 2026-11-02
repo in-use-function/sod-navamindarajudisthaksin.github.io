@@ -560,27 +560,31 @@ window.onload = async function() {
         let response = await fetch(WEB_APP_URL);
         let result = await response.json();
         
-        // แปลงข้อมูลจาก Google Sheets ให้เข้ากับโครงสร้างตารางของเว็บรองรับทั้งห้องและอุปกรณ์
-        appData = result.map(row => ({
-            id: row.id || Date.now().toString(),
-            type: row.roomName ? 'room' : 'equipment',
-            roomName: row.roomName || '',
-            equipItem: row.equipItem || '',
-            borrower: row.borrower || '',
-            dept: row.dept || '',
-            title: row.title || '',
-            date: row.date || '',
-            startTime: row.startTime || '',
-            endTime: row.endTime || '',
-            attendees: parseInt(row.attendees) || 0,
-            qty: parseInt(row.qty) || 1,
-            startDateTime: row.startDateTime || '',
-            endDateTime: row.endDateTime || '',
-            status: row.status || 'approved'
-        }));
+        // ถ้าดึงข้อมูลสำเร็จและมีข้อมูลอยู่จริง ให้ Map ข้อมูลมาใช้งาน
+        if (Array.isArray(result) && result.length > 0) {
+            appData = result.map(row => ({
+                id: row.id || Date.now().toString(),
+                type: row.type || (row.roomName ? 'room' : 'equipment'),
+                roomName: row.roomName || '',
+                equipItem: row.equipItem || '',
+                borrower: row.borrower || '',
+                dept: row.dept || '',
+                title: row.title || '',
+                date: row.date || '',
+                startTime: row.startTime || '',
+                endTime: row.endTime || '',
+                attendees: parseInt(row.attendees) || 0,
+                qty: parseInt(row.qty) || 1,
+                startDateTime: row.startDateTime || '',
+                endDateTime: row.endDateTime || '',
+                status: row.status || 'pending'
+            }));
+        } else {
+            appData = []; // หากใน Sheet ไม่มีข้อมูล ให้ตารางว่างเปล่า
+        }
     } catch (error) {
         console.error("ไม่สามารถโหลดข้อมูลจาก Google Sheets ได้:", error);
-        appData = [...INITIAL_DATA]; // ใช้ข้อมูลสำรองถ้าดึงไม่สำเร็จ
+        appData = []; // ไม่ดึงข้อมูลตัวอย่างมาโชว์
     }
 
     // ตรวจสอบสถานะการล็อกอินแอดมิน
