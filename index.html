@@ -1,4 +1,499 @@
-<!-- JAVASCRIPT LOGIC -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบริการงานโสตทัศนศึกษา - โรงเรียนนวมินทราชูทิศ ทักษิณ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fffbebe6',
+                            100: '#fef3c7',
+                            500: '#d97706',
+                            600: '#b45309',
+                            700: '#92400e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        .tab-active { border-bottom: 3px solid #d97706; color: #b45309; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Logo & School Name -->
+                <div class="flex items-center space-x-3">
+                    <img src="nmt.png.png" alt="โลโก้โรงเรียนนวมินทราชูทิศ ทักษิณ" class="h-12 w-auto object-contain" onerror="this.src='https://placehold.co/100x100/f59e0b/ffffff?text=NMT';">
+                    <div>
+                        <h1 class="font-bold text-base sm:text-lg text-slate-800 leading-tight">ระบบบริการงานโสตทัศนศึกษา</h1>
+                        <p class="text-xs text-amber-700 font-medium hidden sm:block">โรงเรียนนวมินทราชูทิศ ทักษิณ</p>
+                    </div>
+                </div>
+
+                <!-- Admin Auth Button & Status -->
+                <div class="flex items-center space-x-3">
+                    <span id="user-status-badge" class="hidden px-2.5 py-1 bg-amber-100 text-amber-900 text-xs font-semibold rounded-full border border-amber-300">
+                        <i class="fa-solid fa-user-check mr-1"></i> ฝ่ายงานโสตฯ (Admin)
+                    </span>
+                    <button id="auth-btn" onclick="openAuthModal()" class="px-4 py-2 text-xs sm:text-sm font-medium rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition duration-200 flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span id="auth-btn-text">เข้าสู่ระบบ (ฝ่ายโสตฯ)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Summary Bar for AV Team Overview -->
+        <div class="bg-amber-50/60 border-t border-amber-200/60 py-3 px-4 sm:px-8">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-7xl mx-auto">
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-amber-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-slate-500 font-medium">ทีมงานฝ่ายโสตฯ</p>
+                        <p id="dash-team-count-display" class="text-lg font-bold text-slate-800">20 คน</p>
+                    </div>
+                    <i class="fa-solid fa-users text-amber-500 text-xl opacity-80"></i>
+                </div>
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-amber-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-slate-500 font-medium">งานปฏิบัติการวันนี้</p>
+                        <p id="dash-today-jobs-display" class="text-lg font-bold text-amber-600">0 งาน</p>
+                    </div>
+                    <i class="fa-solid fa-list-check text-amber-500 text-xl opacity-80"></i>
+                </div>
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-amber-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-slate-500 font-medium">อุปกรณ์พร้อมใช้</p>
+                        <p id="dash-equip-ready-display" class="text-lg font-bold text-emerald-600">95%</p>
+                    </div>
+                    <i class="fa-solid fa-box-archive text-emerald-500 text-xl opacity-80"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white border-b border-slate-200 text-slate-600 shadow-sm overflow-x-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-8 text-sm sm:text-base font-medium whitespace-nowrap">
+                <button onclick="switchTab('room-schedule')" id="tab-room-schedule" class="py-3 px-3 sm:px-1 border-b-2 border-transparent hover:text-amber-600 transition flex items-center gap-2 tab-active">
+                    <i class="fa-solid fa-door-open text-amber-500"></i> ตารางยืมห้องโสตฯ
+                </button>
+                <button onclick="switchTab('equipment-schedule')" id="tab-equipment-schedule" class="py-3 px-3 sm:px-1 border-b-2 border-transparent hover:text-amber-600 transition flex items-center gap-2">
+                    <i class="fa-solid fa-microphone text-amber-500"></i> ตารางยืมอุปกรณ์
+                </button>
+                <button onclick="switchTab('admin-portal')" id="tab-admin-portal" class="py-3 px-3 sm:px-1 border-b-2 border-transparent hover:text-amber-600 transition flex items-center gap-2 relative">
+                    <i class="fa-solid fa-sliders text-amber-500"></i> จัดการข้อมูล (ฝ่ายโสตฯ)
+                    <span id="pending-count-badge" class="hidden bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+
+        <!-- TAB 1: ตารางการยืมห้องโสตฯ -->
+        <section id="section-room-schedule" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-amber-600"></i> ตารางการยืมใช้งานห้องโสตทัศนศึกษา
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">ตรวจสอบวัน เวลา และสถานะการขอใช้ห้องประชุม/ห้องโสตฯ</p>
+                </div>
+                <!-- Filter Controls -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <input type="date" id="room-filter-date" onchange="renderRoomTable()" class="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <select id="room-filter-select" onchange="renderRoomTable()" class="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <option value="all">ห้องทั้งหมด</option>
+                        <option value="หอประชุมราชพฤกษ์ ">หอประชุมราชพฤกษ์</option>
+                        <option value="ห้องมหาชนก ">ห้องมหาชนก</option>
+                        <option value="ห้องจิตรลดา ">ห้องจิตรลดา</option>
+                    </select>
+                    <button onclick="resetRoomFilter()" class="p-2 text-slate-400 hover:text-slate-600 text-sm" title="ล้างตัวกรอง">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-amber-50/50 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-amber-100">
+                                <th class="py-4 px-6">วัน - เวลา</th>
+                                <th class="py-4 px-6">ห้องที่ยืม</th>
+                                <th class="py-4 px-6">ชื่อกิจกรรม</th>
+                                <th class="py-4 px-6">ผู้ยืม</th>
+                                <th class="py-4 px-6 text-center">ผู้เข้าร่วม</th>
+                                <th class="py-4 px-6 text-center">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="room-table-body" class="divide-y divide-slate-100 text-sm text-slate-700">
+                            <!-- JS Inject Data -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="room-empty-msg" class="hidden text-center py-12 text-slate-400">
+                    <i class="fa-regular fa-calendar-xmark text-4xl mb-3 block"></i>
+                    ไม่พบรายการยืมห้องตามเงื่อนไขที่เลือก
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: ตารางการยืมอุปกรณ์ -->
+        <section id="section-equipment-schedule" class="space-y-6 hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-box-open text-amber-600"></i> ตารางการยืมอุปกรณ์โสตทัศนูปกรณ์
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">รายการอุปกรณ์ ไมโครโฟน โปรเจคเตอร์ และลำโพงที่ถูกยืมใช้งาน</p>
+                </div>
+                <!-- Filter Controls -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <input type="date" id="equip-filter-date" onchange="renderEquipTable()" class="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <input type="text" id="equip-filter-search" onkeyup="renderEquipTable()" placeholder="ค้นหาชื่ออุปกรณ์/ผู้ยืม..." class="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 w-48">
+                    <button onclick="resetEquipFilter()" class="p-2 text-slate-400 hover:text-slate-600 text-sm" title="ล้างตัวกรอง">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-amber-50/50 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-amber-100">
+                                <th class="py-4 px-6">วัน - เวลา ที่ยืมใช้งาน</th>
+                                <th class="py-4 px-6">รายการอุปกรณ์ที่ยืม</th>
+                                <th class="py-4 px-6 text-center">จำนวน</th>
+                                <th class="py-4 px-6">ผู้ยืม / กิจกรรม</th>
+                                <th class="py-4 px-6 text-center">กำหนดคืน</th>
+                                <th class="py-4 px-6 text-center">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="equip-table-body" class="divide-y divide-slate-100 text-sm text-slate-700">
+                            <!-- JS Inject Data -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="equip-empty-msg" class="hidden text-center py-12 text-slate-400">
+                    <i class="fa-regular fa-folder-open text-4xl mb-3 block"></i>
+                    ไม่พบรายการยืมอุปกรณ์ตามเงื่อนไขที่เลือก
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: ระบบจัดการสำหรับฝ่ายโสตฯ (Admin Portal) -->
+        <section id="section-admin-portal" class="space-y-6 hidden">
+
+            <!-- Access Denied Banner if not logged in -->
+            <div id="admin-login-guard" class="bg-amber-50 border border-amber-200 p-6 rounded-2xl text-center space-y-4">
+                <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-amber-900">พื้นที่สำหรับฝ่ายงานโสตฯ เท่านั้น</h3>
+                    <p class="text-sm text-amber-700 mt-1">กรุณาเข้าสู่ระบบด้วยรหัสผ่านประจำฝ่ายโสตฯ เพื่อบันทึก อนุมัติ หรือแก้ไขข้อมูลตารางยืม</p>
+                </div>
+                <button onclick="openAuthModal()" class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition shadow-sm inline-flex items-center gap-2">
+                    <i class="fa-solid fa-key"></i> เข้าสู่ระบบฝ่ายโสตฯ
+                </button>
+            </div>
+
+            <!-- Admin Management Content (Shown when logged in) -->
+            <div id="admin-content" class="space-y-6 hidden">
+                
+                <!-- Settings Panel for Stats -->
+                <div class="bg-amber-500/10 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-amber-900 font-semibold text-sm">
+                        <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูลสถิติฝ่ายโสตฯ (สมาชิก & อุปกรณ์พร้อมใช้):
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <input type="number" id="input-team-count" placeholder="จำนวนสมาชิก" class="w-28 px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
+                        <input type="text" id="input-equip-ready" placeholder="อุปกรณ์พร้อมใช้ e.g. 95%" class="w-36 px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
+                        <button onclick="updateDashboardStats()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition">
+                            บันทึกสถิติ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Admin Dashboard Overview Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">คำขอรออนุมัติ</p>
+                            <h3 id="dash-pending-count" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">รายการยืมห้องทั้งหมด</p>
+                            <h3 id="dash-room-count" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-door-closed"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">รายการยืมอุปกรณ์ทั้งหมด</p>
+                            <h3 id="dash-equip-count" class="text-2xl font-bold text-amber-700 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-50 text-amber-700 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-sliders"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Toggle: Pending Requests / Room Records / Equipment Records -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div class="flex items-center gap-2">
+                            <button onclick="setAdminSubTab('pending')" id="subtab-pending" class="px-4 py-2 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                คำขอรออนุมัติ
+                            </button>
+                            <button onclick="setAdminSubTab('room')" id="subtab-room" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50">
+                                จัดการยืมห้อง
+                            </button>
+                            <button onclick="setAdminSubTab('equip')" id="subtab-equip" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50">
+                                จัดการยืมอุปกรณ์
+                            </button>
+                        </div>
+                        <button onclick="openCreateModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> เพิ่มรายการตรงโดยฝ่ายโสตฯ
+                        </button>
+                    </div>
+
+                    <!-- SubTab 1: Pending Approvals -->
+                    <div id="admin-subtab-pending" class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-800">คำขอยืมที่รอการตรวจสอบ</h3>
+                        <div id="pending-list-container" class="space-y-3">
+                            <!-- Inject via JS -->
+                        </div>
+                    </div>
+
+                    <!-- SubTab 2: Manage Room Records -->
+                    <div id="admin-subtab-room" class="space-y-4 hidden">
+                        <h3 class="text-base font-bold text-slate-800">รายการยืมห้องโสตฯ ทั้งหมดในระบบ</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-100">
+                                        <th class="py-3 px-4">วัน-เวลา</th>
+                                        <th class="py-3 px-4">ห้อง</th>
+                                        <th class="py-3 px-4">กิจกรรม</th>
+                                        <th class="py-3 px-4">ผู้ยืม</th>
+                                        <th class="py-3 px-4 text-center">สถานะ</th>
+                                        <th class="py-3 px-4 text-center">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-room-tbody" class="divide-y divide-slate-100">
+                                    <!-- Inject via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- SubTab 3: Manage Equipment Records -->
+                    <div id="admin-subtab-equip" class="space-y-4 hidden">
+                        <h3 class="text-base font-bold text-slate-800">รายการยืมอุปกรณ์โสตฯ ทั้งหมดในระบบ</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-100">
+                                        <th class="py-3 px-4">วันยืม - กำหนดคืน</th>
+                                        <th class="py-3 px-4">อุปกรณ์</th>
+                                        <th class="py-3 px-4 text-center">จำนวน</th>
+                                        <th class="py-3 px-4">ผู้ยืม</th>
+                                        <th class="py-3 px-4 text-center">สถานะ</th>
+                                        <th class="py-3 px-4 text-center">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-equip-tbody" class="divide-y divide-slate-100">
+                                    <!-- Inject via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-center text-xs">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>© 2026 งานโสตทัศนศึกษา โรงเรียนนวมินทราชูทิศ ทักษิณ. All rights reserved.</p>
+            <p class="mt-1 text-slate-500">ระบบอำนวยความสะดวกการตรวจสอบตารางจองห้องและยืมอุปกรณ์โสตฯ</p>
+            <p class="mt-1 text-slate-500">ผู้ออกแบบ นายสิรภพ ชูเลิศ</p>
+        </div>
+    </footer>
+
+    <!-- MODAL: Authentication (Login ฝ่ายโสตฯ) -->
+    <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-amber-600"></i> ยืนยันตัวตนฝ่ายงานโสตฯ
+                </h3>
+                <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-500">เข้าสู่ระบบเพื่อสิทธิ์ในการบันทึก แก้ไข และจัดการตารางงานโสตฯ</p>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่านเจ้าหน้าที่ / ฝ่ายโสตฯ</label>
+                    <input type="password" id="auth-pass-input" required placeholder="กรอกรหัสผ่าน..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAuthModal()" class="px-4 py-2 text-sm rounded-xl border border-slate-200 text-slate-600">ยกเลิก</button>
+                    <button type="submit" class="px-4 py-2 text-sm rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium">เข้าสู่ระบบ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Add / Edit Record (Direct entry by Admin) -->
+    <div id="record-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4 my-8">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 id="modal-title" class="text-lg font-bold text-slate-800">เพิ่มรายการยืมใหม่</h3>
+                <button onclick="closeRecordModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form id="modal-form" onsubmit="handleSaveRecord(event)" class="space-y-4 text-sm">
+                <input type="hidden" id="edit-id">
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">ประเภทรายการ</label>
+                    <select id="modal-type" onchange="toggleModalFields()" class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                        <option value="room">ยืมห้องโสตฯ</option>
+                        <option value="equipment">ยืมอุปกรณ์โสตฯ</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">ผู้ยืม / นักเรียน / ครู</label>
+                        <input type="text" id="modal-borrower" required class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">หน่วยงาน / กลุ่มสาระฯ</label>
+                        <input type="text" id="modal-dept" required class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อกิจกรรม / รายการที่ยืม</label>
+                    <input type="text" id="modal-title-input" required class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                </div>
+
+                <!-- Dynamic Modal Room -->
+                <div id="modal-room-box" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">เลือกห้อง</label>
+                            <select id="modal-room-name" class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                                <option value="หอประชุมราชพฤกษ์ ">หอประชุมราชพฤกษ์</option>
+                                <option value="ห้องมหาชนก ">ห้องมหาชนก</option>
+                                <option value="ห้องจิตรลดา ">ห้องจิตรลดา</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">จำนวนผู้เข้าร่วม</label>
+                            <input type="number" id="modal-attendees" value="30" class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">วันที่</label>
+                            <input type="date" id="modal-room-date" class="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">เวลาเริ่ม</label>
+                            <input type="time" id="modal-room-start" class="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">เวลาเลิก</label>
+                            <input type="time" id="modal-room-end" class="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Modal Equipment -->
+                <div id="modal-equip-box" class="space-y-3 hidden">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">อุปกรณ์</label>
+                            <input type="text" id="modal-equip-item" class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">จำนวน</label>
+                            <input type="number" id="modal-equip-qty" value="1" class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">วัน-เวลายืม</label>
+                            <input type="datetime-local" id="modal-equip-start" class="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">กำหนดคืน</label>
+                            <input type="datetime-local" id="modal-equip-end" class="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">สถานะ</label>
+                    <select id="modal-status" class="w-full px-3 py-2 border border-slate-200 rounded-xl">
+                        <option value="approved">อนุมัติแล้ว (Approved)</option>
+                        <option value="pending">รอการอนุมัติ (Pending)</option>
+                        <option value="returned">คืนแล้ว/เสร็จสิ้น (Completed)</option>
+                        <option value="rejected">ปฏิเสธ (Rejected)</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeRecordModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         // Initial Mock Data
         const INITIAL_DATA = [
@@ -54,91 +549,97 @@
             equipReady: '95%'
         };
 
-        // Web App URL จาก Google Apps Script
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzhP2ta-Z_0pGO0g5hG9dB5ZeGb5qXSVmNNBC7yQD6uHpdYimsyhMPNBZ42OLfvuzMBLg/exec";
+        
+        
+        // Initial Load
+      // Initial Load (ดึงข้อมูลออนไลน์จาก Google Sheets)
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzhP2ta-Z_0pGO0g5hG9dB5ZeGb5qXSVmNNBC7yQD6uHpdYimsyhMPNBZ42OLfvuzMBLg/exec";
 
-        // Initial Load (ดึงข้อมูลออนไลน์จาก Google Sheets)
-        window.onload = async function() {
-            try {
-                let response = await fetch(WEB_APP_URL);
-                let result = await response.json();
-                
-                appData = result.map(row => ({
-                    id: row.id || Date.now().toString(),
-                    type: row.type || (row.roomName ? 'room' : 'equipment'),
-                    roomName: row.roomName || '',
-                    equipItem: row.equipItem || '',
-                    borrower: row.borrower || '',
-                    dept: row.dept || '',
-                    title: row.title || '',
-                    date: row.date || '',
-                    startTime: row.startTime || '',
-                    endTime: row.endTime || '',
-                    attendees: parseInt(row.attendees) || 0,
-                    qty: parseInt(row.qty) || 1,
-                    startDateTime: row.startDateTime || '',
-                    endDateTime: row.endDateTime || '',
-                    status: row.status || 'pending'
-                }));
-            } catch (error) {
-                console.error("ไม่สามารถโหลดข้อมูลจาก Google Sheets ได้:", error);
-                appData = [...INITIAL_DATA];
-            }
+window.onload = async function() {
+    try {
+        let response = await fetch(WEB_APP_URL);
+        let result = await response.json();
+        
+        // แปลงข้อมูลจาก Google Sheets ให้เข้ากับโครงสร้างตารางของเว็บรองรับทั้งห้องและอุปกรณ์
+        appData = result.map(row => ({
+            id: row.id || Date.now().toString(),
+            type: row.roomName ? 'room' : 'equipment',
+            roomName: row.roomName || '',
+            equipItem: row.equipItem || '',
+            borrower: row.borrower || '',
+            dept: row.dept || '',
+            title: row.title || '',
+            date: row.date || '',
+            startTime: row.startTime || '',
+            endTime: row.endTime || '',
+            attendees: parseInt(row.attendees) || 0,
+            qty: parseInt(row.qty) || 1,
+            startDateTime: row.startDateTime || '',
+            endDateTime: row.endDateTime || '',
+            status: row.status || 'approved'
+        }));
+    } catch (error) {
+        console.error("ไม่สามารถโหลดข้อมูลจาก Google Sheets ได้:", error);
+        appData = [...INITIAL_DATA]; // ใช้ข้อมูลสำรองถ้าดึงไม่สำเร็จ
+    }
 
-            const savedAuth = localStorage.getItem('school_av_admin_logged');
-            if (savedAuth === 'true') {
-                isAdminLoggedIn = true;
-            }
+    // ตรวจสอบสถานะการล็อกอินแอดมิน
+    const savedAuth = localStorage.getItem('school_av_admin_logged');
+    if (savedAuth === 'true') {
+        isAdminLoggedIn = true;
+    }
 
-            updateAuthUI();
-            renderStatsDisplay();
-            renderRoomTable();
-            if (typeof renderEquipTable === 'function') renderEquipTable();
-            if (typeof renderAdminPortal === 'function') renderAdminPortal();
-        };
+    updateAuthUI();
+    renderStatsDisplay();
+    renderRoomTable();
+    if (typeof renderEquipTable === 'function') renderEquipTable();
+    if (typeof renderAdminPortal === 'function') renderAdminPortal();
+};
+// ฟังก์ชันบันทึกข้อมูลการจองส่งตรงไปยัง Google Sheets และรีเฟรชหน้าเว็บอัตโนมัติ
+async function saveToLocalStorage() {
+    const latestBooking = appData[appData.length - 1];
+    if (!latestBooking) return;
 
-        // ฟังก์ชันบันทึกข้อมูลส่งตรงไปยัง Google Sheets แบบเสถียร (ไม่ค้าง)
-        async function saveToLocalStorage() {
-            const latestBooking = appData[appData.length - 1];
-            if (!latestBooking) return;
+    const bookingData = {
+        type: latestBooking.type || "room",
+        roomName: latestBooking.roomName || "",
+        equipItem: latestBooking.equipItem || "",
+        borrower: latestBooking.borrower || "",
+        dept: latestBooking.dept || "",
+        title: latestBooking.title || "",
+        date: latestBooking.date || "",
+        startTime: latestBooking.startTime || "",
+        endTime: latestBooking.endTime || "",
+        attendees: latestBooking.attendees || 0,
+        qty: latestBooking.qty || 1,
+        startDateTime: latestBooking.startDateTime || "",
+        endDateTime: latestBooking.endDateTime || "",
+        status: latestBooking.status || "pending"
+    };
 
-            const bookingData = {
-                type: latestBooking.type || "room",
-                roomName: latestBooking.roomName || "",
-                equipItem: latestBooking.equipItem || "",
-                borrower: latestBooking.borrower || "",
-                dept: latestBooking.dept || "",
-                title: latestBooking.title || "",
-                date: latestBooking.date || "",
-                startTime: latestBooking.startTime || "",
-                endTime: latestBooking.endTime || "",
-                attendees: latestBooking.attendees || 0,
-                qty: latestBooking.qty || 1,
-                startDateTime: latestBooking.startDateTime || "",
-                endDateTime: latestBooking.endDateTime || "",
-                status: latestBooking.status || "pending"
-            };
+    try {
+        // แสดงสถานะกำลังบันทึก
+        showToast('กำลังบันทึกข้อมูลลงระบบ...', 'info');
 
-            try {
-                showToast('กำลังบันทึกข้อมูลลงระบบ...', 'info');
+        await fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify(bookingData)
+        });
+        
+        showToast('บันทึกข้อมูลสำเร็จ!', 'success');
 
-                await fetch(WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify(bookingData)
-                });
-                
-                showToast('บันทึกข้อมูลสำเร็จ! กำลังรีเฟรช...', 'success');
+        // รีเฟรชหน้าเว็บอัตโนมัติหลังจากบันทึกเสร็จ 1 วินาที เพื่อดึงข้อมูลล่าสุดจาก Google Sheets มาแสดงอย่างไร้รอยต่อ
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
 
-                // รีเฟรชหน้าเว็บอัตโนมัติหลังจากบันทึกเสร็จ 1 วินาที เพื่อดึงข้อมูลล่าสุดจาก Google Sheets มาแสดงอย่างไร้รอยต่อ
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-
-            } catch (error) {
-                console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
-                showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
-            }
-        }
+    } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
+        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+        localStorage.setItem('school_av_data', JSON.stringify(appData));
+    }
+}
+  
 
         function renderStatsDisplay() {
             document.getElementById('dash-team-count-display').textContent = statsData.teamCount + ' คน';
@@ -149,6 +650,7 @@
             if (inputTeam) inputTeam.value = statsData.teamCount;
             if (inputReady) inputReady.value = statsData.equipReady;
 
+            // Compute Today's Jobs
             const today = new Date().toISOString().split('T')[0];
             const todayJobs = appData.filter(i => {
                 if (i.type === 'room') return i.date === today && i.status === 'approved';
@@ -170,6 +672,7 @@
             showToast('อัปเดตสถิติเรียบร้อยแล้ว', 'success');
         }
 
+        // Tab Switching Logic
         function switchTab(tabName) {
             const tabs = ['room-schedule', 'equipment-schedule', 'admin-portal'];
             
@@ -199,6 +702,7 @@
             if (tabName === 'admin-portal') renderAdminPortal();
         }
 
+        // --- PUBLIC ROOM SCHEDULE RENDER ---
         function renderRoomTable() {
             const tbody = document.getElementById('room-table-body');
             const filterDate = document.getElementById('room-filter-date').value;
@@ -261,6 +765,7 @@
             renderRoomTable();
         }
 
+        // --- PUBLIC EQUIPMENT SCHEDULE RENDER ---
         function renderEquipTable() {
             const tbody = document.getElementById('equip-table-body');
             const filterDate = document.getElementById('equip-filter-date').value;
@@ -327,6 +832,7 @@
             renderEquipTable();
         }
 
+        // --- AUTHENTICATION MODAL & LOGIC ---
         function openAuthModal() {
             if (isAdminLoggedIn) {
                 isAdminLoggedIn = false;
@@ -400,6 +906,7 @@
             }
         }
 
+        // --- ADMIN PORTAL LOGIC ---
         function renderAdminPortal() {
             const guard = document.getElementById('admin-login-guard');
             const content = document.getElementById('admin-content');
@@ -533,6 +1040,7 @@
             }
         }
 
+        // Action Handlers
         function changeStatus(id, newStatus) {
             const targetId = String(id);
             const index = appData.findIndex(i => String(i.id) === targetId);
@@ -564,6 +1072,7 @@
             }
         }
 
+        // --- ADMIN CREATE / EDIT MODAL ---
         function openCreateModal() {
             document.getElementById('modal-title').textContent = 'เพิ่มรายการยืมใหม่ (โดยฝ่ายโสตฯ)';
             document.getElementById('edit-id').value = '';
@@ -627,7 +1136,7 @@
             const type = document.getElementById('modal-type').value;
 
             const record = {
-                id: editId || 'ID_' + Date.now(),
+                id: editId || Date.now().toString(),
                 type: type,
                 borrower: document.getElementById('modal-borrower').value,
                 dept: document.getElementById('modal-dept').value,
@@ -656,8 +1165,9 @@
                 appData.unshift(record);
             }
 
-            closeRecordModal();
             saveToLocalStorage();
+            closeRecordModal();
+            showToast('บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
             
             renderAdminPortal();
             renderStatsDisplay();
@@ -666,6 +1176,7 @@
             updatePendingBadge();
         }
 
+        // --- HELPER UTILITIES ---
         function getStatusBadgeHTML(status) {
             switch(status) {
                 case 'approved':
@@ -728,3 +1239,5 @@
             }, 3000);
         }
     </script>
+</body>
+</html>
