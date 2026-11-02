@@ -618,7 +618,7 @@ async function saveToLocalStorage() {
     };
 
     try {
-        // แสดงสถานะกำลังบันทึก (ถ้ามี Toast สามารถใส่ได้)
+        // แสดงสถานะกำลังบันทึก
         showToast('กำลังบันทึกข้อมูลลงระบบ...', 'info');
 
         await fetch(WEB_APP_URL, {
@@ -661,33 +661,7 @@ async function saveToLocalStorage() {
         showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
         localStorage.setItem('school_av_data', JSON.stringify(appData));
     }
-}
-
-    try {
-        await fetch(WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify(bookingData)
-        });
-        console.log("บันทึกข้อมูลลง Google Sheets สำเร็จ!");
-    } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
-        localStorage.setItem('school_av_data', JSON.stringify(appData));
-    }
-}
-
-    try {
-        // ใช้ WEB_APP_URL เดียวกับตอนโหลดข้อมูล
-        await fetch(WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify(bookingData)
-        });
-        console.log("บันทึกข้อมูลลง Google Sheets สำเร็จ!");
-    } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
-        // สำรองข้อมูลลงเครื่องไว้ชั่วคราวถ้าเน็ตหลุด
-        localStorage.setItem('school_av_data', JSON.stringify(appData));
-    }
-}
+}    
 
         function renderStatsDisplay() {
             document.getElementById('dash-team-count-display').textContent = statsData.teamCount + ' คน';
