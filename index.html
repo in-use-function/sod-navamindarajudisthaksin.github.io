@@ -553,7 +553,7 @@
         
         // Initial Load
       // Initial Load (ดึงข้อมูลออนไลน์จาก Google Sheets)
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxb4XkUAREelJ9wOmhvpyud6KUWLHpZ4_alOg8Mq0hK0Y9seNofwhwNe-jyd6pGIatRgw/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwTiG2RsysxZ8Ezh7ZZ__FLZT5D8cewaTYu0p4JJ2nKunUUwCAjEmX0G0Qt_4U21cRb_A/exec";
 
 window.onload = async function() {
     try {
@@ -601,38 +601,17 @@ window.onload = async function() {
 };
 // ฟังก์ชันบันทึกข้อมูลการจองส่งตรงไปยัง Google Sheets และรีเฟรชหน้าเว็บอัตโนมัติ
 async function saveToLocalStorage() {
-    const latestBooking = appData[appData.length - 1];
-    if (!latestBooking) return;
-
-    const bookingData = {
-        id: latestBooking.id || "",
-        type: latestBooking.type || "room",
-        roomName: latestBooking.roomName || "",
-        equipItem: latestBooking.equipItem || "",
-        borrower: latestBooking.borrower || "",
-        dept: latestBooking.dept || "",
-        title: latestBooking.title || "",
-        date: latestBooking.date || "",
-        startTime: latestBooking.startTime || "",
-        endTime: latestBooking.endTime || "",
-        attendees: latestBooking.attendees || 0,
-        qty: latestBooking.qty || 1,
-        startDateTime: latestBooking.startDateTime || "",
-        endDateTime: latestBooking.endDateTime || "",
-        status: latestBooking.status || "pending"
-    };
-
     try {
-        showToast('กำลังบันทึกข้อมูลลงระบบ...', 'info');
+        showToast('กำลังซิงค์ข้อมูลกับระบบ...', 'info');
 
+        // ส่งข้อมูล appData ทั้งหมดไปอัปเดตทับใน Google Sheets ทันที
         await fetch(WEB_APP_URL, {
             method: "POST",
-            body: JSON.stringify(bookingData)
+            body: JSON.stringify(appData)
         });
         
         showToast('บันทึกข้อมูลสำเร็จ!', 'success');
 
-        // รีเฟรชหน้าเว็บอัตโนมัติหลังจากบันทึกเสร็จ 1 วินาที เพื่อดึงข้อมูลล่าสุดจาก Google Sheets มาแสดงผล
         setTimeout(() => {
             window.location.reload();
         }, 1000);
