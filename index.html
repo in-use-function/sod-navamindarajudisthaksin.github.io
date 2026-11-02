@@ -595,12 +595,11 @@ window.onload = async function() {
     if (typeof renderEquipTable === 'function') renderEquipTable();
     if (typeof renderAdminPortal === 'function') renderAdminPortal();
 };
-// ฟังก์ชันบันทึกข้อมูลการจองส่งตรงไปยัง Google Sheets แบบครบถ้วนทุกฟิลด์
+// ฟังก์ชันบันทึกข้อมูลการจองส่งตรงไปยัง Google Sheets และรีเฟรชหน้าเว็บอัตโนมัติ
 async function saveToLocalStorage() {
     const latestBooking = appData[appData.length - 1];
     if (!latestBooking) return;
 
-    // จัดเตรียมข้อมูลให้ตรงกับที่ Google Apps Script รอรับ
     const bookingData = {
         type: latestBooking.type || "room",
         roomName: latestBooking.roomName || "",
@@ -617,6 +616,52 @@ async function saveToLocalStorage() {
         endDateTime: latestBooking.endDateTime || "",
         status: latestBooking.status || "pending"
     };
+
+    try {
+        // แสดงสถานะกำลังบันทึก (ถ้ามี Toast สามารถใส่ได้)
+        showToast('กำลังบันทึกข้อมูลลงระบบ...', 'info');
+
+        await fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify(bookingData)
+        });
+        
+        showToast('บันทึกข้อมูลสำเร็จ!', 'success');
+
+        // 🔄 ดึงข้อมูลล่าสุดจาก Google Sheets มาแสดงผลใหม่ทันที เพื่อไม่ให้เว็บค้าง
+        let response = await fetch(WEB_APP_URL);
+        let result = await response.json();
+        
+        appData = result.map(row => ({
+            id: row.id || Date.now().toString(),
+            type: row.roomName ? 'room' : 'equipment',
+            roomName: row.roomName || '',
+            equipItem: row.equipItem || '',
+            borrower: row.borrower || '',
+            dept: row.dept || '',
+            title: row.title || '',
+            date: row.date || '',
+            startTime: row.startTime || '',
+            endTime: row.endTime || '',
+            attendees: parseInt(row.attendees) || 0,
+            qty: parseInt(row.qty) || 1,
+            startDateTime: row.startDateTime || '',
+            endDateTime: row.endDateTime || '',
+            status: row.status || 'approved'
+        }));
+
+        // อัปเดตตารางและหน้าจอทันที
+        renderStatsDisplay();
+        renderRoomTable();
+        if (typeof renderEquipTable === 'function') renderEquipTable();
+        if (typeof renderAdminPortal === 'function') renderAdminPortal();
+
+    } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
+        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+        localStorage.setItem('school_av_data', JSON.stringify(appData));
+    }
+}
 
     try {
         await fetch(WEB_APP_URL, {
