@@ -1191,12 +1191,29 @@ async function saveToLocalStorage() {
         }
 
         function formatThaiDateTime(dateTimeStr) {
-            if (!dateTimeStr) return '-';
-            const parts = dateTimeStr.split('T');
-            const datePart = formatThaiDate(parts[0]);
-            const timePart = parts[1] ? `${parts[1]} น.` : '';
-            return `${datePart} ${timePart}`;
+    if (!dateTimeStr) return '-';
+    
+    // ถ้ามีตัว T แยกวันที่และเวลา
+    if (dateTimeStr.includes('T')) {
+        const parts = dateTimeStr.split('T');
+        let timePart = '';
+        
+        if (parts[1]) {
+            // ตัดเอาเฉพาะ ชั่วโมง:นาที (เช่น 08:00) ตัดวินาทีและตัว Z ทิ้ง
+            timePart = parts[1].substring(0, 5) + ' น.';
         }
+        
+        // ถ้าวันที่ขึ้นต้นด้วย 1899 (แสดงว่าเป็นค่าเวลาเปล่าๆ จาก Google Sheets) ให้แสดงเฉพาะเวลา
+        if (parts[0].startsWith('1899')) {
+            return timePart;
+        }
+        
+        const datePart = formatThaiDate(parts[0]);
+        return `${datePart} ${timePart}`;
+    }
+    
+    return dateTimeStr;
+}
 
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
